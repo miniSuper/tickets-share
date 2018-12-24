@@ -7,6 +7,9 @@
               :data="ticket"
               @onGetTicket="getOneTicket"></ticket>
     </div>
+    <my-footer :ids="idsAll"
+               @unLogin="loginToGetAllTicket"
+               @hasLogin="getAllTicket"></my-footer>
     <van-popup v-model="popupShow">
       <div class="pop-wrapper">
         <i class="icon-close"
@@ -25,7 +28,8 @@
           <div class="tips"
                @click="registerPopupShow= true">还没有账户？赶紧注册一个!</div>
         </div>
-        <button class="btn-submit">立即领取</button>
+        <button class="btn-submit"
+                @click="loginAndGetTicket">立即领取</button>
       </div>
     </van-popup>
     <van-popup v-model="registerPopupShow">
@@ -58,10 +62,17 @@
 <script>
 import MyHeader from '@/components/Header'
 import Ticket from '@/components/Ticket'
-import { getAuthCode } from '@/api/ticket'
+import MyFooter from '@/components/Footer'
+import {
+  getTicketList,
+  getAuthCode,
+  getTicketUnLogin,
+  getTicketHasLogin
+} from '@/api/ticket'
 import { Toast } from 'vant'
+import { mapGetters } from 'vuex'
 export default {
-  components: { MyHeader, Ticket },
+  components: { MyHeader, MyFooter, Ticket },
   data() {
     return {
       tickets: [
@@ -134,6 +145,8 @@ export default {
           rule: '满0.00元减10.00,最高可抵用0元。'
         }
       ],
+      idsAll: '990,991,992,993,994,995,996,997,998,999',
+      idsToGet: '',
       popupShow: false,
       registerPopupShow: false,
       currentTicketId: 0,
@@ -144,6 +157,9 @@ export default {
       codeHasSend: false
     }
   },
+  computed: {
+    ...mapGetters(['token'])
+  },
   methods: {
     getOneTicket(ticketId) {
       this.popupShow = true
@@ -151,9 +167,10 @@ export default {
       console.log(ticketId)
     },
     sendAuthCode() {
-      let data = new URLSearchParams()
-      data.append('mobile', this.mobile)
-      data.append(' type', 'get_coupon')
+      let data = {
+        mobile: this.mobile,
+        type: 'get_coupon'
+      }
       getAuthCode(data)
         .then(res => {
           if (res.status === 1) {
@@ -164,7 +181,46 @@ export default {
           }
         })
         .catch(err => console.log(err))
+    },
+    initTicketList() {
+      let data = {
+        do: 'coupon',
+        view: 'share_list',
+        coupon_ids: this.idsAll
+      }
+      getTicketList(data)
+        .then(res => {
+          if (res.status === 1) {
+            this.tickets = res.data
+          }
+        })
+        .catch(err => console.log(err))
+    },
+    loginAndGetTicket() {
+      let data = {
+        coupon_ids: this.idsToGet,
+        txt_account: this.username,
+        pwd_password: this.password
+      }
+      getTicketUnLogin(data)
+        .then(res => {
+          if (res.status === 1) {
+            this.tickets = res.data
+          }
+        })
+        .catch(err => console.log(err))
+    },
+    loginToGetAllTicket() {
+      this.idsToGet = this.idsAll
+      this.popupShow = true
+    },
+    getAllTicket() {
+      this.idsToGet = this.idsAll
+      getTicketHasLogin(this.idsToGet)
     }
+  },
+  created() {
+    this.initTicketList()
   }
 }
 </script>
