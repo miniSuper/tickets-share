@@ -23,6 +23,5 @@ body {
   text-align: center;
   color: #333;
   background-color: #efefef;
-  height: 100%;
 }
 </style>

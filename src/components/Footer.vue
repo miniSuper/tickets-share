@@ -40,6 +40,7 @@ export default {
   box-sizing border-box
   padding 20px
   background-color #fff
+  border-top 2px solid #e8e8e8
   z-index 1100
 
   .btn-getAll

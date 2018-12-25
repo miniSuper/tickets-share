@@ -1,8 +1,8 @@
 import axios from 'axios'
-import store from '@/store'
-import {
-  getToken
-} from '@/utils/cache'
+// import store from '@/store'
+// import {
+//   getToken
+// } from '@/utils/cache'
 
 // create an axios instance
 const service = axios.create({
@@ -13,12 +13,11 @@ const service = axios.create({
 service.interceptors.request.use(
   config => {
     // Do something before request is sent
-    if (store.getters.token) {
-      config.headers['access_token'] = getToken()
-    }
+    // if (store.getters.token) {
+    //   config.headers['access_token'] = getToken()
+    // }
     config.header = {
       'Content-Type': 'application/x-www-form-urlencoded'
-      // 'Content-Type': 'form-data'
     }
     return config
   },

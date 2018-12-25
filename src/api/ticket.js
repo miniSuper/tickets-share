@@ -6,27 +6,22 @@ const host = 'http://app.api.epweike.net'
 const baseUrl = 'http://m.epwk.ai'
 // 已注册   还未登录(没有token)的情况下  登录并领取优惠券
 export function getTicketUnLogin(data) {
-  let dataAll = {
-    do: 'login',
-    type: 'get_coupon',
-    coupon_ids: data.coupon_ids,
-    txt_account: data.txt_account,
-    pwd_password: data.pwd_password
-  }
+  data = formatData(data)
   return request({
     url: `${baseUrl}/member/login`,
     method: 'post',
-    data: dataAll
+    data
   })
 }
 
 // 已注册 已经登录(有token)的情况下 领取优惠券
-export function getTicketHasLogin(ids) {
+export function getTicketHasLogin(data) {
   let dataAll = {
     do: 'coupon',
     view: 'send',
     access_token: getToken(),
-    coupon_ids: ids
+    coupon_ids: data.coupon_ids,
+    time: data.time
   }
   dataAll = formatData(dataAll)
   return request({
@@ -37,7 +32,8 @@ export function getTicketHasLogin(ids) {
 }
 
 // 还没有账号 注册账号并领取优惠券
-export function registerToGetOneTicket(data) {
+export function registerToGetTicket(data) {
+  data = formatData(data)
   return request({
     url: `${baseUrl}/member/register`,
     method: 'post',

@@ -1,6 +1,16 @@
 <template>
   <div class='share'>
-    <my-header></my-header>
+    <my-header title="赠送优惠券"></my-header>
+    <div class="banner">
+      <img class="logo"
+           src="@/assets/images/logo.png"
+           alt="">
+      <div class="content">
+        <h3 class="title">点击领取您的券包吧</h3>
+        <div class="subTitle"><span class="theme">花非官方</span> 赠送给您<span class="theme"
+                v-text="ticketNum"></span>张优惠券</div>
+      </div>
+    </div>
     <div class="tickets-box">
       <ticket v-for="ticket in tickets"
               :key="ticket.coupon_id"
@@ -8,12 +18,12 @@
               @onGetTicket="getOneTicket"></ticket>
     </div>
     <my-footer :ids="idsAll"
-               @unLogin="loginToGetAllTicket"
-               @hasLogin="getAllTicket"></my-footer>
-    <van-popup v-model="popupShow">
+               @unLogin="getAllTicketUnLogin"
+               @hasLogin="getAllTicketHasLogin"></my-footer>
+    <van-popup v-model="loginPopupShow">
       <div class="pop-wrapper">
         <i class="icon-close"
-           @click="popupShow =false">
+           @click="loginPopupShow =false">
         </i>
         <h4 class="pop-title">我要领券</h4>
         <div class="pop-body">
@@ -23,7 +33,7 @@
                  placeholder="请输入您的手机号码/邮箱号码">
           <input class="password"
                  v-model="password"
-                 type="text"
+                 type="password"
                  placeholder="请输入您的账户密码">
           <div class="tips"
                @click="registerPopupShow= true">还没有账户？赶紧注册一个!</div>
@@ -53,7 +63,19 @@
           </div>
           <div class="tips"><span v-show="codeHasSend">验证码已发送至您的手机!</span></div>
         </div>
-        <button class="btn-submit">注册并领取</button>
+        <button class="btn-submit"
+                @click="register">注册并领取</button>
+      </div>
+    </van-popup>
+    <van-popup v-model="successPopupShow">
+      <div class="pop-wrapper">
+        <img src="@/assets/images/success.png"
+             alt="">
+        <i class="icon-close"
+           @click="successPopupShow = false">
+        </i>
+        <button class="btn-openApp"
+                @click="openApp">打开APP</button>
       </div>
     </van-popup>
   </div>
@@ -67,89 +89,21 @@ import {
   getTicketList,
   getAuthCode,
   getTicketUnLogin,
-  getTicketHasLogin
+  getTicketHasLogin,
+  registerToGetTicket
 } from '@/api/ticket'
 import { Toast } from 'vant'
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 export default {
   components: { MyHeader, MyFooter, Ticket },
   data() {
     return {
-      tickets: [
-        {
-          coupon_id: '900',
-          coupon_name: '要测明细',
-          percent: '0.00',
-          desc:
-            '用券说明:<br/>1.客户端限制:PC|WAP|众包助手...<br/>2.券类型:<br/>3.使用范围分类:<br/>',
-          money: 50,
-          max_money: 0,
-          time_start_use: '2018-12-01 17:14',
-          time_end_use: '2018-12-31 17:14',
-          enough: 0,
-          coupon_type: '0',
-          use_time: '0',
-          is_over: 0,
-          status: 2,
-          rule: '满0.00元减10.00,最高可抵用0元。'
-        },
-        {
-          coupon_id: '910',
-          coupon_name: '要测明细',
-          percent: '0.00',
-          desc:
-            '用券说明:<br/>1.客户端限制:PC|WAP|众包助手...<br/>2.券类型:<br/>3.使用范围分类:<br/>',
-          money: 50,
-          max_money: 0,
-          time_start_use: '2018-12-01 17:14',
-          time_end_use: '2018-12-31 17:14',
-          enough: 0,
-          coupon_type: '0',
-          use_time: '0',
-          is_over: 0,
-          status: 2,
-          rule: '满0.00元减10.00,最高可抵用0元。'
-        },
-        {
-          coupon_id: '920',
-          coupon_name: '要测明细',
-          percent: '0.00',
-          desc:
-            '用券说明:<br/>1.客户端限制:PC|WAP|众包助手...<br/>2.券类型:<br/>3.使用范围分类:<br/>',
-          money: 50,
-          max_money: 0,
-          time_start_use: '2018-12-01 17:14',
-          time_end_use: '2018-12-31 17:14',
-          enough: 0,
-          coupon_type: '0',
-          use_time: '0',
-          is_over: 0,
-          status: 2,
-          rule: '满0.00元减10.00,最高可抵用0元。'
-        },
-        {
-          coupon_id: '930',
-          coupon_name: '要测明细',
-          percent: '0.00',
-          desc:
-            '用券说明:<br/>1.客户端限制:PC|WAP|众包助手...<br/>2.券类型:<br/>3.使用范围分类:<br/>',
-          money: 50,
-          max_money: 0,
-          time_start_use: '2018-12-01 17:14',
-          time_end_use: '2018-12-31 17:14',
-          enough: 0,
-          coupon_type: '0',
-          use_time: '0',
-          is_over: 0,
-          status: 2,
-          rule: '满0.00元减10.00,最高可抵用0元。'
-        }
-      ],
-      idsAll: '990,991,992,993,994,995,996,997,998,999',
+      tickets: [],
+      idsAll: '500,600,700,800,900',
       idsToGet: '',
-      popupShow: false,
+      loginPopupShow: false,
       registerPopupShow: false,
-      currentTicketId: 0,
+      successPopupShow: false,
       username: '',
       password: '',
       mobile: 13068775963,
@@ -158,13 +112,35 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['token'])
+    ...mapGetters(['token']),
+    ticketNum() {
+      return this.tickets.length
+    }
   },
   methods: {
+    ...mapActions(['saveToken']),
+    // 点击 某一个优惠券 的 立即领取按钮  领取单个优惠券
+    refresh() {
+      this.initTicketList()
+    },
     getOneTicket(ticketId) {
-      this.popupShow = true
-      this.currentTicketId = ticketId
-      console.log(ticketId)
+      this.idsToGet = ticketId
+      if (this.token) {
+        this.idsToGet = this.idsAll
+        let data = {
+          coupon_ids: this.idsToGet,
+          time: Date.parse(new Date()) / 1000
+        }
+        getTicketHasLogin(data)
+          .then(res => {
+            if (res.status === 1) {
+              this.successPopupShow = true
+            }
+          })
+          .catch(err => console.log(err))
+      } else {
+        this.loginPopupShow = true
+      }
     },
     sendAuthCode() {
       let data = {
@@ -177,7 +153,7 @@ export default {
             this.codeHasSend = true
             Toast.success('验证码已发送至您的手机!')
           } else {
-            Toast.success(res.msg.r)
+            Toast.fail(res.msg.r)
           }
         })
         .catch(err => console.log(err))
@@ -186,37 +162,83 @@ export default {
       let data = {
         do: 'coupon',
         view: 'share_list',
-        coupon_ids: this.idsAll
+        coupon_ids: this.idsAll,
+        from_uid: '',
+        time: Date.parse(new Date()) / 1000
       }
       getTicketList(data)
         .then(res => {
           if (res.status === 1) {
             this.tickets = res.data
+            console.log(res.data)
           }
         })
         .catch(err => console.log(err))
     },
+    // 登录 并 领取优惠券
     loginAndGetTicket() {
       let data = {
+        do: 'login',
+        type: 'get_coupon',
         coupon_ids: this.idsToGet,
         txt_account: this.username,
-        pwd_password: this.password
+        pwd_password: this.password,
+        time: Date.parse(new Date()) / 1000
       }
       getTicketUnLogin(data)
         .then(res => {
           if (res.status === 1) {
-            this.tickets = res.data
+            this.loginPopupShow = false
+            this.successPopupShow = true
+            this.username = ''
+            this.mobile = ''
           }
         })
         .catch(err => console.log(err))
     },
-    loginToGetAllTicket() {
+    // 还未登录 登录并一键领取全部优惠券
+    getAllTicketUnLogin() {
       this.idsToGet = this.idsAll
-      this.popupShow = true
+      this.loginPopupShow = true
     },
-    getAllTicket() {
+    // 已经登录  一键获取全部优惠券
+    getAllTicketHasLogin() {
       this.idsToGet = this.idsAll
-      getTicketHasLogin(this.idsToGet)
+      let data = {
+        coupon_ids: this.idsToGet,
+        time: Date.parse(new Date()) / 1000
+      }
+      getTicketHasLogin(data)
+        .then(res => {
+          if (res.status === 1) {
+            this.successPopupShow = true
+          }
+        })
+        .catch(err => console.log(err))
+    },
+    register() {
+      // 注册并领取优惠券
+      let data = {
+        type: 'get_coupon',
+        mobile: this.mobile,
+        code: this.code,
+        coupon_ids: this.idsToGet,
+        time: Date.parse(new Date()) / 1000
+      }
+      registerToGetTicket(data)
+        .then(res => {
+          console.log(res)
+          if (res.status === 1) {
+            Toast(res.msg.r)
+            this.registerPopupShow = false
+          } else {
+            Toast.fail(res.msg.r)
+          }
+        })
+        .catch(err => console.log(err))
+    },
+    openApp() {
+      alert('打开APP')
     }
   },
   created() {
@@ -227,6 +249,40 @@ export default {
 
 <style lang='stylus' scoped>
 .share
+  padding-bottom 134px
+
+  .banner
+    display flex
+    flex-flow row nowrap
+    justify-content flex-start
+    padding 40px
+    padding-bottom 30px
+
+    .logo
+      width 110px
+      height 110px
+      margin-right 40px
+
+    .content
+      flex 1
+      text-align left
+      display flex
+      flex-flow column nowrap
+      justify-content center
+
+      .title
+        font-size 36px
+        line-height 40px
+        color #000000
+
+      .subTitle
+        font-size 26px
+        line-height 40px
+        color #545454
+
+        .theme
+          color #f84e4e
+
   .tickets-box
     width 710px
     margin 20px auto
@@ -234,6 +290,7 @@ export default {
   .pop-wrapper
     position relative
     width 600px
+    min-height 414px
 
     .icon-close
       position absolute
@@ -242,7 +299,7 @@ export default {
       display block
       width 50px
       height 50px
-      background #fff url('/static/images/icon_close.png') no-repeat center center
+      background #fff url('~@/assets/images/icon_close.png') no-repeat center center
       background-size contain
 
     .pop-title
@@ -280,6 +337,19 @@ export default {
       border-radius 4px
       background-color #f84e4e
       color #fff
+
+    .btn-openApp
+      position absolute
+      width 90%
+      height 80px
+      line-height 80px
+      bottom 52px
+      left 30px
+      font-weight bold
+      color #fff
+      background-color #f84e4e
+      font-size 30px
+      opacity 0
 
   .pop-register
     .mobile-wrapper

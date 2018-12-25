@@ -1,6 +1,7 @@
 <template>
   <div class='header'>
-    <span class="back">返回</span>
+    <span class="back"
+          @click="back">返回</span>
     {{title}}
   </div>
 </template>
@@ -16,6 +17,11 @@ export default {
   },
   data() {
     return {}
+  },
+  methods: {
+    back() {
+      this.$router.back(-1)
+    }
   }
 }
 </script>
@@ -28,7 +34,7 @@ export default {
   line-height 100px
   font-size 36px
   color #fff
-  background #f84e4e url('/static/images/arrow_left.png') no-repeat left center
+  background #f84e4e url('~@/assets/images/arrow_left.png') no-repeat left center
   background-size 26px 48px
   background-position-x 30px
 

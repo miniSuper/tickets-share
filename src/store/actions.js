@@ -7,7 +7,7 @@ import {
 export const saveToken = ({
   commit
 }, token) => {
-  commit(types.SET_TOKEN, setToken())
+  commit(types.SET_TOKEN, setToken(token))
 }
 
 export const deleteToken = ({

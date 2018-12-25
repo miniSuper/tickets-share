@@ -15,9 +15,10 @@
           <p>有效期至</p>
           <p>{{data.time_end_use}}</p>
         </div>
-        <button class="btn-get"
-                @click="getTicket">
-          立即领取
+        <button :class="btnClass(data.status)"
+                class="btn-get"
+                @click="getTicket(data.status)"
+                v-text="buttonText(data.status)">
         </button>
       </div>
     </div>
@@ -86,8 +87,50 @@ export default {
       console.log('click')
       this.isTicketDetailShow = !this.isTicketDetailShow
     },
-    getTicket() {
+    getTicket(status) {
+      if (status === 3 || status === 4) {
+        return false
+      }
       this.$emit('onGetTicket', this.data.coupon_id)
+    },
+    btnClass(status) {
+      let className = ''
+      switch (status) {
+        case 3:
+          className = 'disabled'
+          break
+        case 4:
+          className = 'disabled'
+          break
+        case 5:
+          className = 'disabled'
+          break
+        default:
+          className = ''
+          break
+      }
+      return className
+    },
+    buttonText(status) {
+      let text = ''
+      switch (status) {
+        case 2:
+          text = '立即领取'
+          break
+        case 3:
+          text = '已使用'
+          break
+        case 4:
+          text = '已过期'
+          break
+        case 5:
+          text = '已领取'
+          break
+        default:
+          text = '立即领取'
+          break
+      }
+      return text
     }
   }
 }
@@ -151,6 +194,10 @@ export default {
         padding 12px 20px
         border-radius 30px
 
+        &.disabled
+          color #d0d0d0
+          border 1px solid #d0d0d0
+
   .detail
     position relative
     min-height 56px
@@ -191,7 +238,7 @@ export default {
         display inline-block
         width 20px
         height 20px
-        background #fff url('/static/images/arrow_down.png') no-repeat center center
+        background #fff url('~@/assets/images/arrow_down.png') no-repeat center center
         transform rotate(0)
         transition 0.3s all ease
 
